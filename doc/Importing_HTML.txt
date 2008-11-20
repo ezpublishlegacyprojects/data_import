@@ -1,0 +1,14 @@
+The data import extension allows to import HTML into eZ Publish
+XML Block data types. It uses a standard eZ Publish handler to
+translate the given HTML into the XML format of XML Block data
+type ( PHP class eZSimplifiedXMLInputParser in
+kernel/classes/datatypes/ezxmltext/handlers/input/ezsimplifiedxmlinputparser.php ) 
+
+Here an example, the handler ( XML input parser ) translate the
+HTML "p" tag into the XML tag "paragraph".
+
+In case the standard eZ Publish handler doesn't provide all needed
+functionality, you are able to use a custom handler. To enable a
+custom handler, you have to override the function "get_ezxml_handler"
+from the "SourceHandler" PHP class. It is a good idea to start of
+the standard handler when developing a custom one.

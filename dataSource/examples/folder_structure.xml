@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<all>
+
+	<entry type="folder" id="10">
+		<field name="name">Root Import Folder</field>
+		<field name="shortname">Import Folder</field>
+		<field name="description">
+		<![CDATA[
+			<p>
+				<b>Vancouver</b> (<a href="/wiki/Help:Pronunciation" title="Help:Pronunciation">pronounced</a>)
+				<a href="/wiki/British_Columbia" title="British Columbia">British Columbia</a>, <a href="/wiki/Canada" title="Canada">Canada</a>.
+				It is named after Captain <a href="/wiki/George_Vancouver" title="George Vancouver">George Vancouver</a>,
+				a <a href="/wiki/Kingdom_of_Great_Britain" title="Kingdom of Great Britain">British</a> explorer.
+			</p>
+		]]>
+		</field>
+		<field name="showsubitems">0</field>
+		<field name="publishdate">1/1/1980</field>
+	</entry>
+
+	<entry type="folder" id="20" parent_id="10">
+		<field name="name">Folder for all Articles</field>
+		<field name="shortname">Articles</field>
+		<field name="description">
+		<![CDATA[
+			<table>
+				<tr>
+					<td>1</td>
+				</tr>
+				<tr>
+					<td>2</td>
+				</tr>
+			</table>
+		]]>
+		</field>
+		<field name="showsubitems">1</field>
+		<field name="publishdate">21/2/2007</field>
+	</entry>
+
+	<entry type="folder" id="30" parent_id="10">
+		<field name="name">Folder for all Images</field>
+		<field name="shortname">Images</field>
+		<field name="description">
+		<![CDATA[
+			<ul>
+				<li>1</li>
+				<li>2</li>
+			</ul>
+		]]>
+		</field>
+		<field name="showsubitems">1</field>
+		<field name="publishdate">11/7/2007</field>
+	</entry>
+
+</all>

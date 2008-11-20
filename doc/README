@@ -1,0 +1,39 @@
+Extension : data_import
+Requires  : eZ Publish 4.0.0
+Authors   : Marius Eliassen (me[_at_]ez.no),
+            Philipp Kamps (pek[_at_].ez.no)
+
+Summary   :
+The purpose of that extension is to import data from a
+given data source (like xml/csv documents) into the eZ
+Publish content tree. This extension is under the GPL.
+
+Concepts :
+We choose a object oririented approach. Developers need to
+implement a SourceHandler that understands the given data
+source. The handler is completely independent from the
+import operators. The import operators contain the logic
+how to create/update the content nodes in eZ Publish.
+
+Import Process :
+Each import process starts with an eZ cronjob script. That
+script only get an instance of a SourceHandler and an
+ImportOperator. It then runs the ImportOperator.
+
+Get started :
+Here a quick description how to get started with that
+extension - so you can decide if it usefull to you.
+
+- install a vanilla eZ Publish 4.0.0 or higher
+  (select the ezwebin package)
+  
+- install this extension
+
+- run 2 example imports
+  prompt> php5 runcronjobs.php import_folders_xml
+  prompt> php5 runcronjobs.php import_images_xml
+
+alternatively:
+
+  prompt> php5 runcronjobs.php import_folders_cvs
+  prompt> php5 runcronjobs.php import_images_cvs
