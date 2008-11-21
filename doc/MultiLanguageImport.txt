@@ -9,7 +9,8 @@ three have the same ID ("100"). Each entry specifies
 the language code in XML ( language="eng-GB" ). Make sure
 that the language code exists in your eZ Publish
 installation -- check "Setup" -> "Languages". The language
-code must show up in the column "Locale".
+code in the column "Locale" must match the language code
+in the XML file.
 
 Run the example:
 
