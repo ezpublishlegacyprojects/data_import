@@ -7,6 +7,10 @@ ExtensionDirectories[]=data_import
 Scripts[]
 Scripts[]=import_folders_xml.php
 
+[CronjobPart-import_multilanguages_xml]
+Scripts[]
+Scripts[]=import_multilanguages_xml.php
+
 [CronjobPart-import_images_xml]
 Scripts[]
 Scripts[]=import_images_xml.php

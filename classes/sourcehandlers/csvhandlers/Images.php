@@ -30,11 +30,33 @@ class Images extends csvHandler
 		$current_field_index = key( $this->mapping );
 		
 		switch( $current_field_index )
-		{		
+		{
+			case '3':
+			{
+				$file = 'extension/data_import/dataSource/examples/' . $this->row[ $current_field_index ];
+				
+				if( file_exists( $file ) )
+				{
+					$value = $file;
+				}
+				else
+				{
+					if( strlen($this->current_field->nodeValue) > 0 )
+						$this->writeLog( 'Could not find image: '.$file, 'import_images.log' );
+					
+					$value = false;
+				}
+			}
+			break;
+			
 			default:
+			{
 				$value = $this->row[ $current_field_index ];
+			}
 		}
 		
+		var_dump( $value );
+
 		return $value;
 	}
 	

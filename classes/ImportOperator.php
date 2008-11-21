@@ -16,7 +16,6 @@ class ImportOperator
 	var $current_eZ_version;
 	var $updated_array;
 	var $do_publish = true;
-	var $create_new_versions = false;
 	var $cli;
 
 	function ImportOperator( $handler )
@@ -42,6 +41,7 @@ class ImportOperator
 			
 		    $remoteID           = $this->source_handler->getDataRowId();
 			$targetContentClass = $this->source_handler->getTargetContentClass();
+			$targetLanguage     = $this->source_handler->getTargetLanguage();
 
 			$this->cli->output( 'Importing remote object ('.$this->cli->stylize( 'emphasize', $remoteID ).') as eZ object ('.$this->cli->stylize( 'emphasize', $targetContentClass ).')... ' , false );
 
@@ -52,13 +52,13 @@ class ImportOperator
 			{
 				$update_method = 'created';
 				// Create new eZ publish object in Database
-				$this->create_eZ_node( $remoteID, $row, $targetContentClass );
+				$this->create_eZ_node( $remoteID, $row, $targetContentClass, $targetLanguage );
 			}
 			else
 			{
 				$update_method = 'updated';
 				// Create new eZ Publish version for existing eZ Object
-				$this->update_eZ_node( $remoteID, $row, $targetContentClass );
+				$this->update_eZ_node( $remoteID, $row, $targetContentClass, $targetLanguage );
 			}
 
 			if( $this->current_eZ_object && $this->current_eZ_version )
@@ -99,30 +99,26 @@ class ImportOperator
 		}
 	}
 
-	function update_eZ_node( $remoteID, $row, $targetContentClass )
+	function update_eZ_node( $remoteID, $row, $targetContentClass, $targetLanguage = null )
 	{
+		// Create new eZ Publish version for existing eZ Object
 		// TODO - does target content class match?
 		// TODO - check parent nod id consitence - and create 2nd location if needed
-		// Create a new version of existing object
-		
-		$this->do_publish = false;
-		
-		if($this->create_new_versions)
-			$this->current_eZ_version = $this->current_eZ_object->createNewVersion();
-		else
-			$this->current_eZ_version = $this->current_eZ_object;
+		$this->do_publish = true;
+
+		$this->current_eZ_version = $this->current_eZ_object->createNewVersion( false, false, $targetLanguage );
 		
 		return true;
 	}
 	
 	
-	function create_eZ_node( $remoteID, $row, $targetContentClass )
+	function create_eZ_node( $remoteID, $row, $targetContentClass, $targetLanguage = null )
 	{
 		$eZClass = eZContentClass::fetchByIdentifier( $targetContentClass );
 
 		if( $eZClass )
 		{
-			$eZ_object = $eZClass->instantiate();
+			$eZ_object = $eZClass->instantiate( false, 0, false, $targetLanguage );
 
 			$eZ_object->setAttribute( 'remote_id', $remoteID );
 			$eZ_object->store();

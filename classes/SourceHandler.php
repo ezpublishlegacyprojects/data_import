@@ -86,6 +86,11 @@ class SourceHandler
 		return 'eZ Content Class identifier';
 	}
 
+	function getTargetLanguage()
+	{
+		return null;
+	}
+
 	/*
 	 * Read the data source
 	 * Can be an xml file, csv file or queries to a remote DB
