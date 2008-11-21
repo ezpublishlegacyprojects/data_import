@@ -1,5 +1,5 @@
 Extension : data_import
-Requires  : eZ Publish 4.0.0
+Requires  : eZ Publish 4.x.x
 Authors   : Marius Eliassen (me[_at_]ez.no),
             Philipp Kamps (pek[_at_].ez.no)
 
