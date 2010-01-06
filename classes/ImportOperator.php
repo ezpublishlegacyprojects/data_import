@@ -1,35 +1,39 @@
 <?php
-include_once 'lib/ezxml/classes/ezxml.php';
-include_once 'lib/ezutils/classes/ezoperationhandler.php';
-include_once 'kernel/classes/ezcontentobject.php';
-include_once 'lib/ezfile/classes/ezlog.php';
-include_once( 'kernel/classes/ezcontentcachemanager.php' );
-include_once( 'lib/ezutils/classes/ezcli.php' );
-include_once( 'kernel/classes/ezscript.php' );
-include_once 'kernel/classes/datatypes/ezurl/ezurlobjectlink.php';
 
 class ImportOperator
 {
 
-	var $source_handler;
+	public $source_handler;
 	var $current_eZ_object;
 	var $current_eZ_version;
 	var $updated_array;
 	var $do_publish = true;
 	var $cli;
+	protected $ezp_script_env;
 
-	function ImportOperator( $handler )
+	public function __construct()
 	{
-		$this->source_handler = $handler;
-		$this->source_handler->logger = new eZLog();
+		# make eZ Publish happy and set the script environment
+		# it is required for some eZp API functions to work
+
+		# Set the environment
+		$this->ezp_script_env = eZScript::instance( array( 'debug-message' => '',
+		                                                   'use-session' => true,
+		                                                   'use-modules' => true,
+		                                                   'use-extensions' => true ) );
+
+		$this->ezp_script_env->startup();
+		$this->ezp_script_env->initialize();
+
+		# At some point I should use the components logger and console tools
 		$this->cli = eZCLI::instance();
 		$this->cli->setUseStyles( true );
-	
-		$this->cli->output( $this->cli->stylize( 'cyan', 'Starting import with "'.$handler->handlerTitle.'" handler'."\n" ), false );
 	}
 
-	function run()
+	public function run()
 	{
+		$this->cli->output( $this->cli->stylize( 'cyan', 'Starting import with "' . $this->source_handler->handlerTitle . '" handler'."\n" ), false );
+
 		$this->source_handler->readData();
 		
 		$force_exit = false;
@@ -40,86 +44,95 @@ class ImportOperator
 			$this->current_eZ_version = null;
 			
 		    $remoteID           = $this->source_handler->getDataRowId();
-			$targetContentClass = $this->source_handler->getTargetContentClass();
 			$targetLanguage     = $this->source_handler->getTargetLanguage();
-
-			$this->cli->output( 'Importing remote object ('.$this->cli->stylize( 'emphasize', $remoteID ).') as eZ object ('.$this->cli->stylize( 'emphasize', $targetContentClass ).')... ' , false );
+			
+			$this->cli->output( 'Importing remote object ('.$this->cli->stylize( 'emphasize', $remoteID ).') ', false );
 
 			$this->current_eZ_object = eZContentObject::fetchByRemoteID( $remoteID );
 
 			$update_method = '';
 			if( !$this->current_eZ_object )
 			{
-				$update_method = 'created';
+				$targetContentClass = $this->source_handler->getTargetContentClass();
+
+				$this->cli->output( 'creating (' . $this->cli->stylize( 'emphasize', $targetContentClass ) . ') ' , false );
+
 				// Create new eZ publish object in Database
 				$this->create_eZ_node( $remoteID, $row, $targetContentClass, $targetLanguage );
 			}
 			else
 			{
-				$update_method = 'updated';
+				$this->cli->output( 'updating ' , false );
+
 				// Create new eZ Publish version for existing eZ Object
-				$this->update_eZ_node( $remoteID, $row, $targetContentClass, $targetLanguage );
+				$this->update_eZ_node( $remoteID, $row, null, $targetLanguage );
 			}
 
 			if( $this->current_eZ_object && $this->current_eZ_version )
 			{
 				$this->save_eZ_node();
-				
+
 				$post_save_success = $this->source_handler->post_save_handling( $this->current_eZ_object, &$force_exit );
-	
+
 				if( $post_save_success )
 				{
 					$this->publish_eZ_node();
-					
+
 					$post_publish_success = $this->source_handler->post_publish_handling( $this->current_eZ_object, &$force_exit );
 					
 					if( $post_publish_success )
 					{
 						$this->setNodesPriority();
-	
-						$this->cli->output( '..'.$this->cli->stylize( 'green', 'successfully '.$update_method.".\n" ), false );
+
+						$this->cli->output( $this->cli->stylize( 'green', 'object ID ( '. $this->current_eZ_object->attribute( 'id' ) . ' )' . ".\n" ), false );
 					}
 					else
 					{
-						$this->cli->output( '..'.$this->cli->stylize( 'red', 'post handling after publish not successful.'."\n" ), false );
+						$this->cli->output( $this->cli->stylize( 'red', 'failed. Post handling after publish not successful.'."\n" ), false );
 					}
 				}
 				else
 				{
-					$this->cli->output( '..'.$this->cli->stylize( 'red', 'post handling after save not successful.'."\n" ), false );
+					$this->cli->output( $this->cli->stylize( 'red', 'failed. Post handling after save not successful.'."\n" ), false );
 				}
 				
 				# Clear content object from $GLOBALS - to prevent OOM (not mana)
-				ezContentObject::clearCache( $this->current_eZ_object->attribute('id') );
+				unset( $GLOBALS[ 'eZContentObjectContentObjectCache' ] );
+				unset( $GLOBALS[ 'eZContentObjectDataMapCache' ] );
+				unset( $GLOBALS[ 'eZContentObjectVersionCache' ] );	
 			}
 			else
 			{
 				$this->cli->output( '..'.$this->cli->stylize( 'gray', 'skipped.'."\n" ), false );
 			}
 		}
+
+		$this->cli->output( $this->cli->stylize( 'cyan', 'Finished.' . "\n" ), false );
+		
+		# Avoid fatal error at the end
+		$this->ezp_script_env->shutdown();
 	}
 
-	function update_eZ_node( $remoteID, $row, $targetContentClass, $targetLanguage = null )
+	protected function update_eZ_node( $remoteID, $row, $targetLanguage = null )
 	{
 		// Create new eZ Publish version for existing eZ Object
-		// TODO - does target content class match?
 		// TODO - check parent nod id consitence - and create 2nd location if needed
 		$this->do_publish = true;
 
-		$this->current_eZ_version = $this->current_eZ_object->createNewVersion( false, false, $targetLanguage );
+		$this->current_eZ_version = $this->current_eZ_object->createNewVersion( false, true, $targetLanguage );
 		
 		return true;
 	}
 	
 	
-	function create_eZ_node( $remoteID, $row, $targetContentClass, $targetLanguage = null )
+	protected function create_eZ_node( $remoteID, $row, $targetContentClass, $targetLanguage = null )
 	{
 		$eZClass = eZContentClass::fetchByIdentifier( $targetContentClass );
 
 		if( $eZClass )
 		{
 			$eZ_object = $eZClass->instantiate( false, 0, false, $targetLanguage );
-
+			
 			$eZ_object->setAttribute( 'remote_id', $remoteID );
 			$eZ_object->store();
 
@@ -141,13 +154,10 @@ class ImportOperator
 			{
 				die('could not assign the object to a node');
 			}
-			
+
 			$this->current_eZ_object  = $eZ_object;
 			$this->current_eZ_version = $eZ_object->currentVersion();
-			
-			unset($eZ_object);
-			unset($nodeAssignment);
-			
+						
 			$this->do_publish = true;
 			
 			return true;
@@ -155,7 +165,6 @@ class ImportOperator
 		else
 		{
 			$this->cli->output( $this->cli->stylize( 'red', 'Target content class invalid' ), false );
-			//echo 'Target content class invalid';
 		}
 
 		return false;
@@ -175,25 +184,16 @@ class ImportOperator
 			}
 			else
 			{
-				echo 'eZ Attribute ('.$this->source_handler->geteZAttributeIdentifierFromField().') does not exist.';
-				exit;
+				$this->cli->output( $this->cli->stylize( 'red', 'eZ Attribute ('.$this->source_handler->geteZAttributeIdentifierFromField().') does not exist - skipped.' ), false );
 			}
-			
-			unset( $contentObjectAttribute );
 		}
 		
-		unset( $dataMap );
-		
-		$this->setNodesPriority();
-
 		$this->current_eZ_object->store();
-		
-		eZContentCacheManager::clearContentCache( $this->current_eZ_object->attribute('id') );
 	}
 
 	function publish_eZ_node()
 	{
-		if( $this->do_publish )
+		if( true || $this->do_publish )
 		{
 			return eZOperationHandler::execute(
 			                                   'content',
@@ -215,6 +215,7 @@ class ImportOperator
 		switch( $contentObjectAttribute->attribute( 'data_type_string' ) )
 		{
 			case 'ezobjectrelation':
+			{
 				// Remove any exisiting value first from ezobjectrelation
 				/*
 				eZContentObject::removeContentObjectRelation( $contentObjectAttribute->attribute('data_int'),
@@ -227,11 +228,12 @@ class ImportOperator
 				$contentObjectAttribute->store();
 
 				$value = $this->source_handler->getValueFromField();
+			}
 			break;
 			
 			case 'ezobjectrelationlist':
+			{
 				// Remove any exisiting value first from ezobjectrelationlist
-				include_once( 'kernel/classes/datatypes/ezobjectrelationlist/ezobjectrelationlisttype.php' );
 				
 				$content = $contentObjectAttribute->content();
                 $relationList =& $content['relation_list'];
@@ -246,13 +248,7 @@ class ImportOperator
                 $contentObjectAttribute->store();
                 
                 $value = $this->source_handler->getValueFromField();
-			break;
-			
-			case 'ezxmltext':
-				$value = $this->specialXmlTextHandling( $this->source_handler->getValueFromField(),
-				                                        $this->current_eZ_version->attribute( 'contentobject_id' ),
-                                                        $contentObjectAttribute->attribute( 'id' ),
-                                                        $contentObjectAttribute->attribute( 'version' ) );
+			}
 			break;
 
 			default:
@@ -264,36 +260,7 @@ class ImportOperator
 		$contentObjectAttribute->fromString( $value );
 		$contentObjectAttribute->store();
 	}
-	
-	// move that into the switch statement
-	function specialXmlTextHandling( $input_xml, $objectID, $objectAttributeID, $objectAttributeVersion )
-	{
-		$parser = null;
-		$document = null;
-		$return = null;
-		
-		$parser = $this->source_handler->get_ezxml_handler();
-		$document = $parser->process( $input_xml );
-		
-		# Not sure if you need that fix for inline links in ezp4
-        #foreach( $parser->getUrlIDArray() as $urlID )
-        #{
-        #    $urlObjectLink = eZURLObjectLink::create( $urlID, $objectAttributeID, $objectAttributeVersion );
-        #    $urlObjectLink->store();
-        #}
-		
-		if(!class_exists('eZXMLTextType'))
-			include_once( 'kernel/classes/datatypes/ezxmltext/ezxmltexttype.php' );
-		
-		$return = eZXMLTextType::domString( $document );
-		
-		unset($document);
-		unset($parser);
-		
-		// Create XML structure
-		return $return;
-	}
-		
+			
 	function setNodesPriority()
 	{	
 		$node_priority = $this->source_handler->getPriorityForNode();

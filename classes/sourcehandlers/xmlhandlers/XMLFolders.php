@@ -1,7 +1,6 @@
 <?php
-include_once 'extension/data_import/classes/sourcehandlers/XmlHandlerPHP5.php';
 
-class Folders extends XmlHandlerPHP5
+class XMLFolders extends XmlHandlerPHP
 {
 	var $handlerTitle = 'Folders Handler';
 
@@ -26,7 +25,7 @@ class Folders extends XmlHandlerPHP5
 		$this->logger->write( self::REMOTE_IDENTIFIER.$this->current_row->getAttribute('id').': '.$message , $logfile );
 	}
 	
-	// mapping for xml field name and attribute name in ez publish
+	// mapping for xml field name to an attribute name in ez publish
 	function geteZAttributeIdentifierFromField()
 	{
 		$field_name = $this->current_field->getAttribute('name');
@@ -65,8 +64,27 @@ class Folders extends XmlHandlerPHP5
 				}
 				return $return_unix_ts;
 				
-				break;
 			}
+			break;
+			
+			case 'short_description':
+			case 'description':
+			{
+				$xml_text_parser = new XmlTextParser();
+				$xmltext = $xml_text_parser->Html2XmlText( $this->current_field->nodeValue );
+
+				if($xmltext !== false)
+				{
+					return $xmltext;
+				}
+				else
+				{
+					//TODO: add logging
+					return "";
+				}
+				
+			}
+			break;
 			
 			default:
 			{

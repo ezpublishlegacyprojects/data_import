@@ -1,7 +1,6 @@
 <?php
-include_once 'extension/data_import/classes/sourcehandlers/XmlHandlerPHP5.php';
 
-class MultiLanguagesHandler extends XmlHandlerPHP5
+class XMLMultiLanguages extends XmlHandlerPHP
 {
 	var $handlerTitle = 'Multi Languages Handler';
 

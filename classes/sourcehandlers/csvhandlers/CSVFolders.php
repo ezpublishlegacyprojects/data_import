@@ -1,7 +1,7 @@
 <?php
 include_once( 'extension/data_import/classes/sourcehandlers/csvHandler.php' );
 
-class Folders extends csvHandler
+class CSVFolders extends csvHandler
 {
 
 	var $handlerTitle = 'Folder CSV';

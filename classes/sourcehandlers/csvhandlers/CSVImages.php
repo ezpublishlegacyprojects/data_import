@@ -1,7 +1,7 @@
 <?php
 include_once( 'extension/data_import/classes/sourcehandlers/csvHandler.php' );
 
-class Images extends csvHandler
+class CSVImages extends csvHandler
 {
 
 	var $handlerTitle = 'Image CSV';
@@ -55,8 +55,6 @@ class Images extends csvHandler
 			}
 		}
 		
-		var_dump( $value );
-
 		return $value;
 	}
 	

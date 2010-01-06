@@ -1,7 +1,6 @@
 <?php
-include_once 'extension/data_import/classes/SourceHandler.php';
 
-class XmlHandlerPHP5 extends SourceHandler
+class XmlHandlerPHP extends SourceHandler
 {
 	var $first_row = true;
 	var $first_field = true;
@@ -10,7 +9,7 @@ class XmlHandlerPHP5 extends SourceHandler
 	var $source_file;
 	var $dom;
 
-	function XmlHandlerPHP5() {}
+	function __construct() {}
 
 	function getNextRow()
 	{
@@ -27,7 +26,7 @@ class XmlHandlerPHP5 extends SourceHandler
 			$this->current_row = $this->current_row->nextSibling;
 		}
 
-		if( $this->current_row->nodeType != 1 ) //ignore xml #text nodes
+		if( is_object( $this->current_row ) && $this->current_row->nodeType != 1 ) //ignore xml #text nodes
 		{
 			$this->current_row = $this->getNextValidNode( $this->current_row );
 		}
@@ -47,7 +46,7 @@ class XmlHandlerPHP5 extends SourceHandler
 			$this->current_field = $this->current_field->nextSibling;
 		}
 
-		if( $this->current_field->nodeType != 1 ) //ignore xml #text nodes
+		if( is_object( $this->current_field ) && $this->current_field->nodeType != 1 ) //ignore xml #text nodes
 		{
 			$this->current_field = $this->getNextValidNode( $this->current_field );
 		}
@@ -111,23 +110,11 @@ class XmlHandlerPHP5 extends SourceHandler
 		
 		return true;
 	}
-	
-	function HandleXmlError($errno, $errstr, $errfile, $errline)
+		
+	function XmlLoader( $strXml )
 	{
-	    if ($errno==E_WARNING && (substr_count($errstr,"DOMDocument::loadXML()")>0))
-	    {
-	        throw new DOMException($errstr);
-	    }
-	    else
-	        return false;
-	}
-	
-	function XmlLoader($strXml)
-	{
-	    set_error_handler('XmlHandlerPHP5::HandleXmlError');
 	    $dom = new DOMDocument();
 	    $dom->loadXml($strXml);   
-	    restore_error_handler();
 	    return $dom;
 	}
 	

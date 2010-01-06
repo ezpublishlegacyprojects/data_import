@@ -1,5 +1,4 @@
 <?php
-include_once( 'extension/data_import/classes/SourceHandler.php' );
 
 class MySQLHandler extends SourceHandler
 {

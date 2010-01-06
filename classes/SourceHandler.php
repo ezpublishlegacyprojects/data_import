@@ -26,10 +26,8 @@ class SourceHandler
 	var $db;
 	var $node_priority = false;
 
-	function SourceHandler()
-	{
-		
-	}
+	function __construct()
+	{}
 	
 	function getPriorityForNode()
 	{
@@ -122,13 +120,7 @@ class SourceHandler
 
 		return $content;
 	}
-	
-	function get_ezxml_handler()
-	{
-		include_once( 'kernel/classes/datatypes/ezxmltext/handlers/input/ezsimplifiedxmlinputparser.php' );
-		
-		return new eZSimplifiedXMLInputParser( null );
-	}
+
 
 	/*
 	 * Method is called after all attributes are saved and

@@ -1,3 +1,16 @@
+1.5
+- support for PHP 4 removed
+- cronjob replaced by a new start-up script
+- HTML import improved
+- PHP tidy extension supported
+- admin interface shows remote ID in the node details
+- admin interface has a new widget to search by remote ID
+- unfortunately I broke the multi-language import
+  (or ezp api changed).
+- dropped the PHP include statements
+- renamed classes to avoid conflicts from ezp autoload
+  generate
+
 1.4
 - create_new_versions flag removed
 - new ImportHandler to NOT create new object versions

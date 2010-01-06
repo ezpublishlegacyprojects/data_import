@@ -1,14 +1,24 @@
 The data import extension allows to import HTML into eZ Publish
-XML Block data types. It uses a standard eZ Publish handler to
-translate the given HTML into the XML format of XML Block data
-type ( PHP class eZSimplifiedXMLInputParser in
-kernel/classes/datatypes/ezxmltext/handlers/input/ezsimplifiedxmlinputparser.php ) 
+XML Block data types. Therefore the system has to tranlate the
+HTML text into the eZ Publish XML format. For example, it has
+to translate <p>My text here</p> to <paragraph>My text here</paragraph>
 
-Here an example, the handler ( XML input parser ) translate the
-HTML "p" tag into the XML tag "paragraph".
+To simplify the process, this extensions contains a parser that is
+doing the job for you. But notice that the eZ Publish XML parser for
+XML blocks is very picky. At least it gives concrete error messages
+when a parsing failed.
 
-In case the standard eZ Publish handler doesn't provide all needed
-functionality, you are able to use a custom handler. To enable a
-custom handler, you have to override the function "get_ezxml_handler"
-from the "SourceHandler" PHP class. It is a good idea to start of
-the standard handler when developing a custom one.
+A working example is in XMLFolders.php:
+
+	$xml_text_parser = new XmlTextParser();
+	$xmltext = $xml_text_parser->Html2XmlText( '<p>My text here</p>' );
+
+So all you need to do is to get an instance of XmlTextParser. The class
+is under data_import/classes/Html2XmlText.php.
+
+In case the parsing failed you can read the error messages like that:
+
+print_r( $xml_text_parser->get_error_messages() );
+
+If the PHP tidy extension is installed the parser will use it and will
+greatly improve the success rate of parsing a given HTML text.

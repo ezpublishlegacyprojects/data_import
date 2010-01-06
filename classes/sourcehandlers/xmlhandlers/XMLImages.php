@@ -1,7 +1,6 @@
 <?php
-include_once 'extension/data_import/classes/sourcehandlers/XmlHandlerPHP5.php';
 
-class Images extends XmlHandlerPHP5
+class XMLImages extends XmlHandlerPHP
 {
 	var $handlerTitle = 'Images Handler';
 

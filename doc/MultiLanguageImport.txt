@@ -1,3 +1,5 @@
++++ Currently broken in version 1.5 -- sorry +++
+
 The extension allows to import multiple languages per eZ Object.
 
 Try the example to see how it works.
