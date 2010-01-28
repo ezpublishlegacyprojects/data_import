@@ -9,22 +9,9 @@ class ImportOperator
 	var $updated_array;
 	var $do_publish = true;
 	var $cli;
-	protected $ezp_script_env;
 
 	public function __construct()
 	{
-		# make eZ Publish happy and set the script environment
-		# it is required for some eZp API functions to work
-
-		# Set the environment
-		$this->ezp_script_env = eZScript::instance( array( 'debug-message' => '',
-		                                                   'use-session' => true,
-		                                                   'use-modules' => true,
-		                                                   'use-extensions' => true ) );
-
-		$this->ezp_script_env->startup();
-		$this->ezp_script_env->initialize();
-
 		# At some point I should use the components logger and console tools
 		$this->cli = eZCLI::instance();
 		$this->cli->setUseStyles( true );
@@ -43,8 +30,8 @@ class ImportOperator
 			$this->current_eZ_object = null;
 			$this->current_eZ_version = null;
 			
-		    $remoteID           = $this->source_handler->getDataRowId();
-			$targetLanguage     = $this->source_handler->getTargetLanguage();
+		    $remoteID       = $this->source_handler->getDataRowId();
+			$targetLanguage = $this->source_handler->getTargetLanguage();
 			
 			$this->cli->output( 'Importing remote object ('.$this->cli->stylize( 'emphasize', $remoteID ).') ', false );
 
@@ -65,7 +52,7 @@ class ImportOperator
 				$this->cli->output( 'updating ' , false );
 
 				// Create new eZ Publish version for existing eZ Object
-				$this->update_eZ_node( $remoteID, $row, null, $targetLanguage );
+				$this->update_eZ_node( $remoteID, $row, $targetLanguage );
 			}
 
 			if( $this->current_eZ_object && $this->current_eZ_version )
@@ -108,9 +95,6 @@ class ImportOperator
 		}
 
 		$this->cli->output( $this->cli->stylize( 'cyan', 'Finished.' . "\n" ), false );
-		
-		# Avoid fatal error at the end
-		$this->ezp_script_env->shutdown();
 	}
 
 	protected function update_eZ_node( $remoteID, $row, $targetLanguage = null )
